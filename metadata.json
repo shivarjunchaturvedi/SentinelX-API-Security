@@ -1,0 +1,10 @@
+{
+  "name": "SentinelX - API Security & Threat Intelligence",
+  "description": "Defensive API security monitoring, threat detection, rate limiting, and automated security configuration auditing platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "LOCAL_RULE_ENGINE",
+    "API_SECURITY_MONITORING",
+    "THREAT_DETECTION"
+  ]
+}
