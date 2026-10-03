@@ -60,6 +60,13 @@ Unlike mock demonstration projects, SentinelX implements **real working security
 
 ---
 
+## SentinelX Dashboard
+
+The SentinelX dashboard provides a centralized view of API security telemetry, request activity, suspicious traffic, threat severity, authentication failures, and rate-limiting events.
+
+![SentinelX Security Dashboard](Screenshot%202026-10-04%20002752.png)
+
+
 ## Architecture
 
 SentinelX provides a dual-runtime deployment model:
