@@ -1,5 +1,20 @@
 # SentinelX
-### Production-Grade Defensive API Security & Threat Intelligence Platform
+
+<div align="center">
+
+### Defensive API Security & Threat Monitoring Platform
+
+A full-stack project for API telemetry, defensive threat detection, rate limiting, access control, and security configuration audits.
+
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?style=flat-square&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-19-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+
+[Features](#key-features) · [Architecture](#architecture) · [Setup](#quickstart--local-setup) · [Tests](#running-automated-tests) · [Ethical Use](#ethical-use--authorized-testing-notice)
+
+</div>
 
 SentinelX is a full-stack cybersecurity platform engineered to monitor API ingress traffic, identify anomalous patterns, enforce sliding-window rate limiting, execute safe configuration audits, and maintain an immutable audit trail.
 
@@ -204,12 +219,17 @@ Tests cover:
 
 ---
 
-## Default Evaluator Personas
+## Demo Accounts
 
-For immediate testing, three pre-configured accounts are provided:
-- **Admin**: `admin` / `AdminPass123!` (Full control)
-- **Security Analyst**: `analyst` / `AnalystPass123!` (SOC triage, rule tuning, audits)
-- **Viewer**: `viewer` / `ViewerPass123!` (Read-only observability)
+The application includes pre-configured evaluator personas for local demonstration:
+
+| Role | Username | Intended access |
+|---|---|---|
+| Admin | `admin` | Administrative controls |
+| Security Analyst | `analyst` | Incident triage, rule tuning, and audits |
+| Viewer | `viewer` | Read-only observability |
+
+**Security note:** demo credentials are for local evaluation only. Never expose a demo deployment to the public internet with known default credentials. Replace or disable seeded accounts and configure strong secrets before any shared or production deployment.
 
 ---
 
