@@ -154,6 +154,16 @@ sentinelx/
 
 ---
 
+## Security Configuration
+
+Before running in production, create a private `.env` file from `.env.example` and set `SECRET_KEY` to a cryptographically random value of at least 32 bytes. The application intentionally refuses to start in production when this secret is missing, and does not use a known hard-coded production fallback.
+
+For a local demo, the server can generate a random process-local signing secret when `SECRET_KEY` is absent. Tokens from that local session will become invalid after restarting the server. Registered users, telemetry, rules, and audit logs are held in process memory by the lightweight full-stack demo server and are reset when it restarts; use the separate database-backed backend for durable production storage.
+
+Self-service registration creates Viewer accounts only. Administrative roles should be assigned by an authorized administrator after registration.
+
+---
+
 ## Quickstart & Local Setup
 
 ### Option 1: Full-Stack Mode (Instant Local Preview)
