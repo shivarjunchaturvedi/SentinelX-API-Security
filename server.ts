@@ -118,18 +118,29 @@ interface StoredAuditLog {
   details: string;
 }
 
-// Password hashing helper
+// Password hashing helper.
+// PBKDF2 is used here to keep the built-in demo user format simple; use a high work factor.
+const PASSWORD_HASH_ITERATIONS = 310_000;
 function hashPassword(password: string, salt: string): string {
-  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return crypto.pbkdf2Sync(password, salt, PASSWORD_HASH_ITERATIONS, 64, 'sha512').toString('hex');
 }
 
 function verifyPassword(password: string, hash: string, salt: string): boolean {
+  if (typeof password !== 'string' || typeof hash !== 'string' || typeof salt !== 'string') return false;
   const testHash = hashPassword(password, salt);
-  return crypto.timingSafeEqual(Buffer.from(testHash), Buffer.from(hash));
+  const expected = Buffer.from(hash, 'hex');
+  const actual = Buffer.from(testHash, 'hex');
+  return expected.length === actual.length && crypto.timingSafeEqual(actual, expected);
 }
 
-// JWT Helper
-const JWT_SECRET = process.env.SECRET_KEY || 'sentinelx-insecure-secret-key-change-in-production-min32chars';
+// JWT Helper. Require a deployment secret; a random process-local key is only a local-dev fallback.
+const JWT_SECRET = process.env.SECRET_KEY || crypto.randomBytes(32).toString('hex');
+if (!process.env.SECRET_KEY && process.env.NODE_ENV === 'production') {
+  throw new Error('SECRET_KEY must be set to a strong random value in production.');
+}
+if (process.env.SECRET_KEY && Buffer.byteLength(process.env.SECRET_KEY, 'utf8') < 32) {
+  throw new Error('SECRET_KEY must be at least 32 bytes long.');
+}
 
 function signToken(payload: object, expiresInMinutes: number = 60): string {
   const header = { alg: 'HS256', typ: 'JWT' };
@@ -704,28 +715,57 @@ app.post('/api/v1/auth/login', (req: Request, res: Response) => {
 });
 
 app.post('/api/v1/auth/register', (req: Request, res: Response) => {
-  const { username, email, password, fullName, role } = req.body;
+  const { username, email, password, fullName } = req.body ?? {};
+  // Do not trust client-supplied role fields; all self-registered accounts are Viewers.
   const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
 
-  if (!username || !email || !password || !fullName) {
-    res.status(400).json({ detail: 'Missing required registration fields' });
+  if (typeof username !== 'string' || typeof email !== 'string' ||
+      typeof password !== 'string' || typeof fullName !== 'string') {
+    res.status(400).json({ detail: 'Username, email, password, and full name are required.' });
     return;
   }
 
-  if (users.find((u) => u.username.toLowerCase() === username.toLowerCase())) {
-    res.status(400).json({ detail: 'Username is already registered' });
+  const normalizedUsername = username.trim();
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedFullName = fullName.trim();
+
+  if (normalizedUsername.length < 3 || normalizedUsername.length > 50 ||
+      !/^[a-zA-Z0-9_.-]+$/.test(normalizedUsername)) {
+    res.status(400).json({ detail: 'Username must be 3–50 characters and contain only letters, numbers, dots, underscores, or hyphens.' });
+    return;
+  }
+  if (normalizedEmail.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    res.status(400).json({ detail: 'Enter a valid email address.' });
+    return;
+  }
+  if (password.length < 12 || password.length > 128) {
+    res.status(400).json({ detail: 'Password must be between 12 and 128 characters.' });
+    return;
+  }
+  if (normalizedFullName.length < 2 || normalizedFullName.length > 100) {
+    res.status(400).json({ detail: 'Full name must be between 2 and 100 characters.' });
+    return;
+  }
+
+  if (users.find((u) => u.username.toLowerCase() === normalizedUsername.toLowerCase())) {
+    res.status(409).json({ detail: 'Username is already registered' });
+    return;
+  }
+  if (users.find((u) => u.email.toLowerCase() === normalizedEmail)) {
+    res.status(409).json({ detail: 'Email is already registered' });
     return;
   }
 
   const salt = crypto.randomBytes(16).toString('hex');
   const newUser: StoredUser = {
     id: `usr_${Date.now()}`,
-    username,
-    email,
+    username: normalizedUsername,
+    email: normalizedEmail,
     passwordHash: hashPassword(password, salt),
     salt,
-    role: (role === 'Admin' || role === 'Security Analyst') ? role : 'Viewer',
-    fullName,
+    role: 'Viewer',
+    fullName: normalizedFullName,
     createdAt: new Date().toISOString(),
     lastLogin: new Date().toISOString(),
     isActive: true,
